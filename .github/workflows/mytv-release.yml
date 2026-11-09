@@ -86,6 +86,16 @@ jobs:
           echo "keystore: $(wc -c < "$KS") bytes"
           echo "MYTV_KEYSTORE=$KS" >> "$GITHUB_ENV"
 
+      - name: Cache Gradle
+        if: steps.sync.outputs.build == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper/dists
+            ~/.gradle/caches
+          key: gradle-${{ hashFiles('launcher/gradle/wrapper/gradle-wrapper.properties', 'launcher/**/*.gradle') }}
+          restore-keys: gradle-
+
       - name: Build launcher
         if: steps.sync.outputs.build == 'true'
         working-directory: launcher
@@ -93,7 +103,13 @@ jobs:
           VC=$(( ($(date +%s) - 1767225600) / 60 ))
           echo "VC=$VC" >> "$GITHUB_ENV"
           chmod +x gradlew
-          ./gradlew assembleRelease -PappVersionCode=$VC -PmytvKeystore="$MYTV_KEYSTORE" --no-daemon --console=plain
+          # GitHub's download servers sometimes time out: allow 2 minutes per download and retry the build.
+          sed -i 's/^networkTimeout=.*/networkTimeout=120000/' gradle/wrapper/gradle-wrapper.properties
+          for i in 1 2 3; do
+            ./gradlew assembleRelease -PappVersionCode=$VC -PmytvKeystore="$MYTV_KEYSTORE" --no-daemon --console=plain && break
+            if [ "$i" = 3 ]; then echo "::error::Build failed 3 times"; exit 1; fi
+            echo "Build attempt $i failed; retrying in 30 seconds"; sleep 30
+          done
 
       - name: Check the APK carries the TVs' signing key
         if: steps.sync.outputs.build == 'true'
