@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- my-tv fork: GitHub repository whose Releases the launcher updates from ("owner/repo"). -->
+    <string name="update_repo" translatable="false">Krimlocke/cleanyourtv</string>
+    <string name="update_check" translatable="false">Check for launcher update</string>
+</resources>

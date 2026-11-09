@@ -169,5 +169,12 @@
             style="@style/SettingsRow"
             android:layout_marginTop="18dp"
             android:text="@string/tv_settings" />
+
+        <!-- my-tv fork: in-launcher updater (UpdateRow handles its own click). -->
+        <com.gathin.tvhome.UpdateRow
+            android:id="@+id/updateChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="28dp"
+            android:text="@string/update_check" />
     </LinearLayout>
 </ScrollView>
