@@ -77,7 +77,8 @@ jobs:
         run: |
           if [ -z "$KEYSTORE_B64" ]; then echo "::error::Add the DEBUG_KEYSTORE_B64 secret"; exit 1; fi
           mkdir -p ~/.android
-          echo "$KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+          printf %s "$KEYSTORE_B64" | tr -d ' \r\n\t' | base64 -d > ~/.android/debug.keystore
+          echo "keystore: $(wc -c < ~/.android/debug.keystore) bytes"
 
       - name: Build launcher
         if: steps.sync.outputs.build == 'true'
