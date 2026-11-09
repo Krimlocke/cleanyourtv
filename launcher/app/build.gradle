@@ -48,3 +48,14 @@ dependencies {
     // Test only (never in the APK): plain JVM tests for the module card validators, src/test.
     testImplementation 'junit:junit:4.13.2'
 }
+
+// my-tv fork: a version code that only goes up (minutes since 2026-01-01, or -PappVersionCode from the
+// GitHub Actions release), so a build from GitHub installs over a build from this PC and the other way round.
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        int vc = providers.gradleProperty('appVersionCode')
+                .map { it as Integer }
+                .getOrElse(((System.currentTimeMillis().intdiv(1000L) - 1767225600L).intdiv(60L)) as Integer)
+        variant.outputs.each { it.versionCode.set(vc) }
+    }
+}
