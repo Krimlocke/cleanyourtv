@@ -76,9 +76,10 @@ jobs:
           KEYSTORE_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
         run: |
           if [ -z "$KEYSTORE_B64" ]; then echo "::error::Add the DEBUG_KEYSTORE_B64 secret"; exit 1; fi
-          mkdir -p ~/.android
-          printf %s "$KEYSTORE_B64" | tr -d ' \r\n\t' | base64 -d > ~/.android/debug.keystore
-          echo "keystore: $(wc -c < ~/.android/debug.keystore) bytes"
+          KS="$RUNNER_TEMP/mytv.keystore"
+          printf %s "$KEYSTORE_B64" | tr -d ' \r\n\t' | base64 -d > "$KS"
+          echo "keystore: $(wc -c < "$KS") bytes"
+          echo "MYTV_KEYSTORE=$KS" >> "$GITHUB_ENV"
 
       - name: Build launcher
         if: steps.sync.outputs.build == 'true'
@@ -87,7 +88,15 @@ jobs:
           VC=$(( ($(date +%s) - 1767225600) / 60 ))
           echo "VC=$VC" >> "$GITHUB_ENV"
           chmod +x gradlew
-          ./gradlew assembleRelease -PappVersionCode=$VC --no-daemon --console=plain
+          ./gradlew assembleRelease -PappVersionCode=$VC -PmytvKeystore="$MYTV_KEYSTORE" --no-daemon --console=plain
+
+      - name: Check the APK carries the TVs' signing key
+        if: steps.sync.outputs.build == 'true'
+        run: |
+          EXPECTED=0474c4cdb73200983937a849443b872ba2b346cd11a455f0767ca18a85974592
+          GOT=$("$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --print-certs launcher/app/build/outputs/apk/release/app-release.apk | sed -n 's/.*SHA-256 digest: //p' | head -1)
+          echo "signer: $GOT"
+          if [ "$GOT" != "$EXPECTED" ]; then echo "::error::APK signed with $GOT, the TVs expect $EXPECTED. Not publishing."; exit 1; fi
 
       - name: Publish release
         if: steps.sync.outputs.build == 'true'
