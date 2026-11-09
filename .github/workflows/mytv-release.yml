@@ -1,4 +1,5 @@
-# my-tv fork: rebase onto the original repo every night, build the launcher and publish it as a Release
+# my-tv fork: once a week, rebase onto the original repo's latest RELEASE (not its main branch), build the
+# launcher and publish it as a Release
 # (tag build-<versionCode>, asset cleanyourtv-launcher.apk) for the launcher's built-in updater.
 name: my-tv release
 
@@ -6,7 +7,7 @@ on:
   push:
     branches: [my-tv]
   schedule:
-    - cron: '37 17 * * *'   # 03:37 Brisbane
+    - cron: '37 10 * * 0'   # Sundays 20:37 Brisbane
   workflow_dispatch:
 
 permissions:
@@ -28,16 +29,20 @@ jobs:
           ref: my-tv
           fetch-depth: 0
 
-      - name: Rebase on the original repo
+      - name: Rebase on the original repo's latest release
         id: sync
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ "${{ github.event_name }}" = "push" ]; then echo "build=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          TAG=$(gh api repos/Gathin23/cleanyourtv/releases/latest --jq .tag_name)
+          if [ -z "$TAG" ]; then echo "::error::Could not read the original repo's latest release"; exit 1; fi
+          echo "Original repo's latest release: $TAG"
           git remote add upstream https://github.com/Gathin23/cleanyourtv.git
-          git fetch upstream main
-          if git merge-base --is-ancestor upstream/main HEAD; then
-            echo "Already up to date with the original repo."
+          git fetch --no-tags upstream "refs/tags/$TAG:refs/tags/upstream-$TAG"
+          BASE="upstream-$TAG"
+          if git merge-base --is-ancestor "$BASE" HEAD; then
+            echo "my-tv already includes $TAG."
             if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
               echo "build=true" >> "$GITHUB_OUTPUT"
             else
@@ -45,13 +50,13 @@ jobs:
             fi
             exit 0
           fi
-          if git rebase upstream/main; then
+          if git rebase "$BASE"; then
             git push --force-with-lease origin HEAD:my-tv
             echo "build=true" >> "$GITHUB_OUTPUT"
           else
             git rebase --abort
-            title="Original repo update conflicts with my-tv"
-            gh issue create --title "$title" --body "Rebasing my-tv onto Gathin23/cleanyourtv main ($(git rev-parse --short upstream/main)) hit a conflict. On the PC: git fetch upstream; git rebase upstream/main; fix the files; git rebase --continue; git push --force-with-lease." || true
+            title="Original repo release $TAG conflicts with my-tv"
+            gh issue create --title "$title" --body "Rebasing my-tv onto Gathin23/cleanyourtv release $TAG hit a conflict. On the PC: git fetch upstream --tags; git rebase $TAG; fix the files; git rebase --continue; git push --force-with-lease." || true
             echo "::error::$title"
             exit 1
           fi
