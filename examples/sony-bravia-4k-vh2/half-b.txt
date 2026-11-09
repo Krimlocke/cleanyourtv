@@ -1,0 +1,12 @@
+com.sony.dtv.seeds.iot
+com.sony.dtv.seeds.iot.remotestart
+com.sony.dtv.sonytab
+android.autoinstalls.config.sony.bravia
+com.sony.dtv.lastaccess
+com.sony.dtv.usercontext
+com.vewd.core.integration.dia
+com.sony.dtv.helpguidecontents
+com.sony.dtv.livingfit
+com.sony.dtv.osat.music
+com.sonypicturescore
+com.google.android.videos

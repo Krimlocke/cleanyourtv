@@ -1,0 +1,16 @@
+tv.samba.ssm
+tv.samba.ssm.ui
+com.qterics.da.product
+com.sony.dtv.da.service
+com.sonyericsson.idd.agent
+com.sony.dtv.sonybugreportsys
+com.google.android.feedback
+com.sony.dtv.demosupport
+com.sony.dtv.demosystemsupport
+com.sony.dtv.multiscreendemo
+com.sony.dtv.customersupport
+com.sony.dtv.smarthelp
+com.google.android.play.games
+com.sony.dtv.promos
+com.sony.dtv.sonyselect
+com.sony.dtv.b2b.vendorprotocol
