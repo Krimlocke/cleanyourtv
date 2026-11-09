@@ -59,3 +59,10 @@ androidComponents {
         variant.outputs.each { it.versionCode.set(vc) }
     }
 }
+
+// my-tv fork: sign with an explicit keystore when one is given (-PmytvKeystore=<path>, used by GitHub Actions),
+// so the GitHub build carries the same key as the launcher already on the TVs.
+def mytvKeystore = providers.gradleProperty('mytvKeystore')
+if (mytvKeystore.isPresent()) {
+    android.signingConfigs.debug.storeFile = file(mytvKeystore.get())
+}
